@@ -8,8 +8,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+from app.models.train import TrainCategory
 from app.simulation.simulator import CorridorSimulator
 
 app = FastAPI(
@@ -17,6 +22,15 @@ app = FastAPI(
     description="Real-Time Decision Support System for Indian Railways Section Controllers using Google OR-Tools CP-SAT",
     version="1.0.0"
 )
+
+# Disable caching for all responses so browser always gets the latest code immediately
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    response: Response = await call_next(request)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 # Initialize corridor simulator instance
 simulator = CorridorSimulator()
@@ -48,6 +62,37 @@ def run_optimization():
         "overtakes_count": len(simulator.last_optimized_result.overtakes) if simulator.last_optimized_result else 0,
         "comparison": simulator.get_full_state()["comparison"]
     }
+
+
+class AddTrainRequest(BaseModel):
+    number: str
+    name: str
+    category: TrainCategory
+    direction: str
+    start_time: str
+    stopping_stations: List[str] = []
+
+
+@app.post("/api/add-train")
+def add_train_endpoint(req: AddTrainRequest):
+    """Dynamically schedule and insert a new train into the corridor."""
+    try:
+        new_train = simulator.add_train(
+            number=req.number,
+            name=req.name,
+            category=req.category,
+            direction=req.direction,
+            start_time_str=req.start_time,
+            stopping_stations=req.stopping_stations
+        )
+        return {
+            "success": True,
+            "message": f"Train {new_train.number} ({new_train.name}) added and corridor re-optimized!",
+            "train": new_train.dict(),
+            "full_state": simulator.get_full_state()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 class DelayInjectionRequest(BaseModel):

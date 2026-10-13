@@ -808,3 +808,136 @@ function acknowledgeAdvisory(event) {
   el.classList.add('bg-emerald-700', 'text-white');
   el.disabled = true;
 }
+
+// =========================================================================
+// ADD TRAIN MODAL CONTROLLERS & API INTERACTION
+// =========================================================================
+
+window.openAddTrainModal = function() {
+  const modal = document.getElementById('addTrainModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  const timeSec = state?.current_sim_time_sec || 52200;
+  const hh = String(Math.floor(timeSec / 3600)).padStart(2, '0');
+  const mm = String(Math.floor((timeSec % 3600) / 60)).padStart(2, '0');
+  const timeInput = document.getElementById('addTrainStartTime');
+  if (timeInput) timeInput.value = `${hh}:${mm}`;
+
+  const errEl = document.getElementById('addTrainErrorMsg');
+  if (errEl) errEl.classList.add('hidden');
+};
+
+window.closeAddTrainModal = function() {
+  const modal = document.getElementById('addTrainModal');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.setStopsPreset = function(preset) {
+  const checkboxes = document.querySelectorAll('input[name="haltStation"]');
+  checkboxes.forEach(cb => {
+    if (preset === 'all') {
+      cb.checked = true;
+    } else if (preset === 'none') {
+      cb.checked = false;
+    } else if (preset === 'junctions') {
+      cb.checked = ['GZB', 'DER', 'KRJ', 'ALJN'].includes(cb.value);
+    }
+  });
+};
+
+window.onCategoryChange = function() {
+  const cat = document.getElementById('addTrainCategory')?.value;
+  if (cat === 'PASSENGER') {
+    window.setStopsPreset('all');
+  } else if (cat === 'VANDE_BHARAT' || cat === 'RAJDHANI') {
+    window.setStopsPreset('junctions');
+  } else if (cat === 'CONCOR' || cat === 'BOXN_COAL') {
+    window.setStopsPreset('none');
+  }
+};
+
+window.submitAddTrain = async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnSubmitAddTrain');
+  const errEl = document.getElementById('addTrainErrorMsg');
+  if (errEl) errEl.classList.add('hidden');
+
+  const number = document.getElementById('addTrainNumber')?.value?.trim();
+  const name = document.getElementById('addTrainName')?.value?.trim();
+  const category = document.getElementById('addTrainCategory')?.value;
+  const direction = document.getElementById('addTrainDirection')?.value;
+  const startTime = document.getElementById('addTrainStartTime')?.value?.trim();
+
+  const stops = [];
+  document.querySelectorAll('input[name="haltStation"]:checked').forEach(cb => {
+    stops.push(cb.value);
+  });
+
+  if (!number || !name || !startTime) {
+    if (errEl) {
+      errEl.innerText = 'Please fill out all required fields.';
+      errEl.classList.remove('hidden');
+    }
+    return;
+  }
+
+  const origBtnText = btn.innerText;
+  btn.disabled = true;
+  btn.innerText = '⏳ Solving CP-SAT...';
+
+  try {
+    const res = await fetch('/api/add-train', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        number: number,
+        name: name,
+        category: category,
+        direction: direction,
+        start_time: startTime,
+        stopping_stations: stops
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Failed to add train');
+    }
+
+    state = data.full_state;
+    window.fullState = state;
+
+    const select = document.getElementById('kavachTrainSelect');
+    if (select) {
+      select.innerHTML = state.trains.map(t => `
+        <option value="${t.id}">${t.number} - ${t.name} (${t.direction})</option>
+      `).join('');
+      state.selected_kavach_train_id = data.train.id;
+      select.value = data.train.id;
+    }
+
+    setSimulationTime(state.current_sim_time_sec);
+
+    renderKPIs(state.kpis);
+    renderAdvisories(state.advisories);
+    renderConflicts(state.baseline_conflicts, state.optimized_conflicts);
+
+    closeAddTrainModal();
+    document.getElementById('formAddTrain')?.reset();
+
+    const banner = document.getElementById('conflictsContainer');
+    if (banner) {
+      banner.innerHTML = `<span class="text-cyan-400 font-bold">✓ Train ${number} Added & Section Optimized!</span>`;
+    }
+  } catch (err) {
+    console.error(err);
+    if (errEl) {
+      errEl.innerText = `Error: ${err.message}`;
+      errEl.classList.remove('hidden');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerText = origBtnText;
+  }
+};

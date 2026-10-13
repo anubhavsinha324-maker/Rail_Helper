@@ -7,7 +7,7 @@ calculates live train positions, block occupancy, and signal aspects.
 import copy
 from typing import List, Dict, Any, Optional
 from app.models.railway_network import CorridorSection, Direction, SignalAspect, SignalType
-from app.models.train import Train, TrainCategory
+from app.models.train import Train, TrainCategory, TimetableEntry, DEFAULT_MPS
 from app.simulation.corridor_data import build_ghaziabad_aligarh_corridor, get_default_train_traffic
 from app.engine.conflict_detector import ConflictDetector
 from app.engine.cp_sat_solver import SectionDispatchOptimizer, SectionOptimizationResult
@@ -39,6 +39,85 @@ class CorridorSimulator:
         """Run both baseline and optimization solver on current state."""
         self.last_baseline_result = self.baseline_dispatcher.simulate(self.trains)
         self.last_optimized_result = self.optimizer.solve(self.trains)
+
+    def add_train(self, number: str, name: str, category: TrainCategory, direction: str, 
+                  start_time_str: str, stopping_stations: List[str]) -> Train:
+        """Dynamically add a new train to the corridor and re-optimize."""
+        parts = [int(p) for p in start_time_str.strip().split(":")]
+        if len(parts) == 2:
+            start_sec = parts[0] * 3600 + parts[1] * 60
+        elif len(parts) == 3:
+            start_sec = parts[0] * 3600 + parts[1] * 60 + parts[2]
+        else:
+            start_sec = 14 * 3600 + 30 * 60
+
+        direction = direction.upper().strip()
+        st_kms = {st.code: st.km for st in self.corridor.stations}
+        
+        if direction == "DOWN":
+            st_order = [s.code for s in self.corridor.stations]
+        else:
+            st_order = [s.code for s in reversed(self.corridor.stations)]
+
+        mps = DEFAULT_MPS.get(category, 100.0)
+        eff_speed = mps * 0.88
+        
+        schedule = []
+        curr_sec = start_sec
+        stops_set = set(stopping_stations or [])
+
+        for i, code in enumerate(st_order):
+            if i == 0:
+                arr = curr_sec
+                dep = curr_sec + 60
+                schedule.append(TimetableEntry(
+                    station_code=code,
+                    scheduled_arrival_sec=arr,
+                    scheduled_departure_sec=dep,
+                    min_dwell_sec=60,
+                    is_commercial_stop=False
+                ))
+                curr_sec = dep
+            else:
+                prev_code = st_order[i - 1]
+                dist = abs(st_kms[code] - st_kms[prev_code])
+                run_sec = max(180, int((dist / eff_speed) * 3600))
+                arr = curr_sec + run_sec
+                is_stop = code in stops_set
+                is_terminus = (i == len(st_order) - 1)
+                dwell = 120 if is_stop else (180 if is_terminus else 0)
+                dep = arr + dwell
+                schedule.append(TimetableEntry(
+                    station_code=code,
+                    scheduled_arrival_sec=arr,
+                    scheduled_departure_sec=dep,
+                    min_dwell_sec=dwell if is_stop else 60,
+                    is_commercial_stop=is_stop
+                ))
+                curr_sec = dep
+
+        cat_prefix = category.value[:3].upper()
+        train_id = f"TR_{direction}_{cat_prefix}_{number.replace('/', '_')}"
+        
+        existing_ids = {t.id for t in self.trains}
+        count = 1
+        final_id = train_id
+        while final_id in existing_ids:
+            final_id = f"{train_id}_{count}"
+            count += 1
+
+        new_train = Train.create(
+            id=final_id,
+            number=number,
+            name=name,
+            category=category,
+            direction=direction,
+            schedule=schedule
+        )
+
+        self.trains.append(new_train)
+        self.refresh()
+        return new_train
 
     def inject_train_delay(self, train_id: str, added_delay_sec: int) -> bool:
         """Inject unexpected delay (e.g. loco trouble, passenger alarm chain pull)."""
