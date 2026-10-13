@@ -104,37 +104,6 @@ Running `python benchmark_test.py` produces the following quantitative compariso
 
 ---
 
-## 5. System Architecture
-
-```
-Project/
-├── app/
-│   ├── models/
-│   │   ├── railway_network.py    # Station, Block Section, Loop Line, Signal & TSR models
-│   │   └── train.py              # Train specs, categories, priority weights, schedules
-│   ├── engine/
-│   │   ├── cp_sat_solver.py      # Google OR-Tools CP-SAT mathematical optimization solver
-│   │   ├── heuristic_baseline.py # First-Come-First-Served (FCFS) conventional dispatcher
-│   │   ├── conflict_detector.py  # Headway violation & catch-up conflict detection
-│   │   └── explainability.py     # Converts solver decisions into human Section Controller advisories
-│   ├── simulation/
-│   │   ├── corridor_data.py      # 106 km Ghaziabad–Aligarh corridor dataset (HDN-1)
-│   │   └── simulator.py          # Real-time discrete-event engine, signals state & Kavach
-│   ├── static/
-│   │   ├── index.html            # Indian Railways Section Controller & Signaling Console
-│   │   ├── css/style.css         # Dark glassmorphism Control Room theme
-│   │   └── js/
-│   │       ├── yard_schematic.js # Live Yard & 4-Aspect Signal Schematic renderer
-│   │       └── app.js            # Controller interactivity, Kavach DMI & state sync
-│   └── main.py                   # FastAPI REST API & asset server
-├── benchmark_test.py             # Head-to-head evaluation test suite
-├── test_api.py                   # API unit and smoke tests
-├── run_server.py                 # Application launcher
-└── README.md
-```
-
----
-
 ## 6. How to Run
 
 ### Step 1: Install Dependencies
