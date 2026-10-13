@@ -1,0 +1,128 @@
+/* RailOpt-IR: Indian Railways OCC Video Wall / CTC Mimic Panel Styling */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Orbitron:wght@500;700;900&display=swap');
+
+:root {
+  --occ-black: #030712;
+  --occ-panel-bg: #050b18;
+  --occ-border: #14223d;
+  --occ-cyan: #00d2ff;
+  --occ-magenta: #e024c3;
+  --occ-red: #ff1744;
+  --occ-green: #00e676;
+  --occ-yellow: #ffea00;
+  --occ-amber: #ff9100;
+  --occ-white: #ffffff;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #02040a;
+  color: #f1f5f9;
+  overflow-x: hidden;
+}
+
+code, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Red LED 7-Segment Digital Master Clock */
+.led-clock {
+  font-family: 'Orbitron', 'JetBrains Mono', monospace;
+  color: #ff2a2a;
+  text-shadow: 0 0 10px rgba(255, 42, 42, 0.8), 0 0 20px rgba(255, 42, 42, 0.4);
+  letter-spacing: 2px;
+}
+
+/* Video Wall Bezel & Multi-Display Panel Grid */
+.video-wall-frame {
+  background: #000000;
+  border: 4px solid #111827;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.9), 0 10px 40px rgba(0, 0, 0, 0.8);
+  position: relative;
+}
+
+.video-wall-frame::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+  background-size: 100% 2px, 3px 100%;
+  z-index: 20;
+}
+
+/* Bezel divider lines simulating LCD display tiles */
+.wall-bezel-divider-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #0f172a;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.wall-bezel-divider-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #0f172a;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Fullscreen Track Map Display Styling */
+.video-wall-frame:fullscreen,
+.video-wall-frame:-webkit-full-screen,
+.video-wall-frame.fullscreen-active {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #000000 !important;
+}
+
+/* Floating Fullscreen HUD controls */
+.fullscreen-hud {
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  background: rgba(5, 11, 24, 0.85);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 210, 255, 0.15);
+  border-radius: 10px;
+  padding: 6px 14px;
+}
+
+.video-wall-frame:fullscreen .fullscreen-hud,
+.video-wall-frame:-webkit-full-screen .fullscreen-hud,
+.video-wall-frame.fullscreen-active .fullscreen-hud {
+  display: flex !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #030712;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
