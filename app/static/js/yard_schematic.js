@@ -1,9 +1,8 @@
 /**
  * Indian Railways Centralised Traffic Control (CTC) & OCC Mega Video Wall Mimic Panel
- * Accurately replicates Railway / Metro Operations Control Centre (OCC) Synoptic Display:
+ * Accurately replicates Railway Operations Control Centre (OCC) Synoptic Display:
  * - Upper Section: Full 106 km Corridor Panoramic Track & Signaling Mimic Display
- * - Lower-Left Section: Station Yard Interlocking Zoom (Dankaur & Dadri Yard with Crossovers & Sidings)
- * - Lower-Right Section: 25 kV AC Traction Power SCADA Overview (TSS, Transformers, Circuit Breakers, OHE)
+ * - Lower Section: Station Yard Interlocking Zoom (Dankaur & Dadri Yard with Crossovers & Sidings)
  */
 
 class OccVideoWallRenderer {
@@ -84,11 +83,8 @@ class OccVideoWallRenderer {
     // 2. Upper Half: Master Corridor Panoramic Track & Signaling Mimic
     this.drawPanoramicCorridorOverview();
 
-    // 3. Lower Left: Detailed Station Yard Interlocking (Dankaur DKDE & Dadri DER)
+    // 3. Lower Section: Detailed Station Yard Interlocking (Dankaur DKDE & Dadri DER)
     this.drawYardInterlockingZoom();
-
-    // 4. Lower Right: 25 kV AC Traction Power SCADA Overview
-    this.drawTractionPowerOverview();
   }
 
   drawVideoWallGrid() {
@@ -97,18 +93,11 @@ class OccVideoWallRenderer {
     ctx.strokeStyle = '#0a101f';
     ctx.lineWidth = 1.5;
 
-    // Horizontal split between upper corridor and lower overviews
+    // Horizontal split between upper corridor and lower yard zoom
     const midY = Math.round(this.height * 0.50);
     ctx.beginPath();
     ctx.moveTo(0, midY);
     ctx.lineTo(this.width, midY);
-    ctx.stroke();
-
-    // Vertical split for lower section
-    const splitX = Math.round(this.width * 0.52);
-    ctx.beginPath();
-    ctx.moveTo(splitX, midY);
-    ctx.lineTo(splitX, this.height);
     ctx.stroke();
 
     ctx.restore();
@@ -418,15 +407,18 @@ class OccVideoWallRenderer {
   // =========================================================================
   // LOWER-LEFT SECTION: STATION YARD INTERLOCKING ZOOM (DANKAUR & DADRI)
   // =========================================================================
+  // =========================================================================
+  // LOWER SECTION: STATION YARD INTERLOCKING (DANKAUR & DADRI YARD)
+  // =========================================================================
   drawYardInterlockingZoom() {
     const ctx = this.ctx;
     const panelX = 20;
     const panelY = Math.round(this.height * 0.51);
-    const panelW = Math.round(this.width * 0.50);
+    const panelW = this.width - 40;
     const remH = this.height - panelY;
 
     ctx.save();
-    // Sub-panel Title (like "TRANSPORT NAGAR" in the reference image)
+    // Sub-panel Title
     ctx.font = '700 11px Plus Jakarta Sans, sans-serif';
     ctx.fillStyle = '#00e676';
     ctx.textAlign = 'left';
@@ -443,8 +435,8 @@ class OccVideoWallRenderer {
     const y4 = panelY + Math.round(remH * 0.68);  // DOWN Loop Siding (Overtake Hold Line)
     const y5 = panelY + Math.round(remH * 0.84);  // Goods Yard / DFC Link Line
 
-    const startX = panelX + 30;
-    const endX = panelX + panelW - 30;
+    const startX = panelX + 40;
+    const endX = panelX + panelW - 40;
 
     // Draw Yard Tracks in crisp SCADA style
     const tracks = [
@@ -476,26 +468,26 @@ class OccVideoWallRenderer {
     ctx.beginPath();
     ctx.strokeStyle = '#facc15';
     ctx.lineWidth = 2;
-    ctx.moveTo(midX - 120, y3);
-    ctx.lineTo(midX - 70, y4);
-    ctx.lineTo(midX + 70, y4);
-    ctx.lineTo(midX + 120, y3);
+    ctx.moveTo(midX - 220, y3);
+    ctx.lineTo(midX - 140, y4);
+    ctx.lineTo(midX + 140, y4);
+    ctx.lineTo(midX + 220, y3);
     ctx.stroke();
 
     // Turnout Point Indicators
     ctx.font = '700 8px JetBrains Mono, monospace';
     ctx.fillStyle = '#facc15';
-    ctx.fillText('PT 101A [REV]', midX - 110, y3 - 8);
-    ctx.fillText('PT 101B [REV]', midX + 80, y3 - 8);
+    ctx.fillText('PT 101A [REV]', midX - 200, y3 - 8);
+    ctx.fillText('PT 101B [REV]', midX + 160, y3 - 8);
 
     // Diamond Scissors Crossover between UP and DOWN main lines
     ctx.beginPath();
     ctx.strokeStyle = '#00d2ff';
     ctx.lineWidth = 1.5;
-    ctx.moveTo(midX - 50, y2);
-    ctx.lineTo(midX + 50, y3);
-    ctx.moveTo(midX + 50, y2);
-    ctx.lineTo(midX - 50, y3);
+    ctx.moveTo(midX - 90, y2);
+    ctx.lineTo(midX + 90, y3);
+    ctx.moveTo(midX + 90, y2);
+    ctx.lineTo(midX - 90, y3);
     ctx.stroke();
 
     // Interlocked Starter & Home Signals at Dankaur (Dynamically synced to live signals)
@@ -527,10 +519,10 @@ class OccVideoWallRenderer {
     );
 
     const sigs = [
-      { x: midX - 140, y: y3 - 10, name: 'DKDE-1S (HOME)', color: getSigColor(dkHome, '#ffea00'), feather: dkHome?.route_feather_active },
-      { x: midX - 80, y: y4 - 10, name: 'DKDE-L1 (LOOP STR)', color: loopTrain ? '#ff1744' : '#00e676' },
-      { x: midX + 80, y: y3 - 10, name: 'DKDE-2S (MAIN STR)', color: getSigColor(dkStr, '#00e676') },
-      { x: midX + 140, y: y3 - 10, name: 'DKDE-ADV (ADV STR)', color: getSigColor(dkAdv, '#00e676') },
+      { x: midX - 280, y: y3 - 10, name: 'DKDE-1S (HOME)', color: getSigColor(dkHome, '#ffea00'), feather: dkHome?.route_feather_active },
+      { x: midX - 150, y: y4 - 10, name: 'DKDE-L1 (LOOP STR)', color: loopTrain ? '#ff1744' : '#00e676' },
+      { x: midX + 150, y: y3 - 10, name: 'DKDE-2S (MAIN STR)', color: getSigColor(dkStr, '#00e676') },
+      { x: midX + 280, y: y3 - 10, name: 'DKDE-ADV (ADV STR)', color: getSigColor(dkAdv, '#00e676') },
     ];
 
     sigs.forEach(s => {
@@ -564,11 +556,11 @@ class OccVideoWallRenderer {
       ctx.shadowColor = '#ff1744';
       ctx.shadowBlur = 10;
       ctx.beginPath();
-      ctx.moveTo(midX - 60, y4);
-      ctx.lineTo(midX + 60, y4);
+      ctx.moveTo(midX - 120, y4);
+      ctx.lineTo(midX + 120, y4);
       ctx.stroke();
 
-      const boxW = 100;
+      const boxW = 130;
       const boxH = 18;
       ctx.fillStyle = '#05070f';
       ctx.strokeStyle = loopTrain.color_hex || '#f59e0b';
@@ -583,7 +575,7 @@ class OccVideoWallRenderer {
       ctx.textAlign = 'center';
       ctx.fillText(`${loopTrain.train_number} [HOLD IN LOOP]`, midX, y4 + 3);
     } else {
-      ctx.font = '600 7px JetBrains Mono, monospace';
+      ctx.font = '600 8px JetBrains Mono, monospace';
       ctx.fillStyle = '#334155';
       ctx.textAlign = 'center';
       ctx.fillText('LOOP SIDING CLEAR • NO BERTH', midX, y4 + 3);
@@ -591,21 +583,21 @@ class OccVideoWallRenderer {
 
     // Dynamic Train Running Through Dankaur Main Line
     if (throughTrain) {
-      const vbX = midX + 30;
+      const vbX = midX + 60;
       ctx.strokeStyle = '#00e676';
       ctx.lineWidth = 3.5;
       ctx.shadowColor = '#00e676';
       ctx.shadowBlur = 10;
       ctx.beginPath();
-      ctx.moveTo(vbX - 50, y3);
-      ctx.lineTo(vbX + 50, y3);
+      ctx.moveTo(vbX - 80, y3);
+      ctx.lineTo(vbX + 80, y3);
       ctx.stroke();
 
       ctx.fillStyle = '#05070f';
       ctx.strokeStyle = throughTrain.color_hex || '#8b5cf6';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(vbX - 50, y3 - 9, 100, 18, 2);
+      ctx.roundRect(vbX - 60, y3 - 9, 120, 18, 2);
       ctx.fill();
       ctx.stroke();
 
@@ -616,157 +608,6 @@ class OccVideoWallRenderer {
     }
 
     ctx.restore();
-
-    ctx.restore();
-  }
-
-  // =========================================================================
-  // LOWER-RIGHT SECTION: 25 kV AC TRACTION POWER SCADA OVERVIEW
-  // =========================================================================
-  drawTractionPowerOverview() {
-    const ctx = this.ctx;
-    const panelX = Math.round(this.width * 0.54);
-    const panelY = Math.round(this.height * 0.51);
-    const panelW = this.width - panelX - 20;
-    const remH = this.height - panelY;
-
-    ctx.save();
-    // Sub-panel Title (Exact match to "25 kV OVERVIEW" in reference image)
-    ctx.font = '700 11px Plus Jakarta Sans, sans-serif';
-    ctx.fillStyle = '#00e676';
-    ctx.textAlign = 'left';
-    ctx.fillText('25 kV AC TRACTION SCADA OVERVIEW', panelX + 10, panelY + 22);
-
-    ctx.font = '500 9px JetBrains Mono, monospace';
-    ctx.fillStyle = '#64748b';
-    ctx.fillText('TRACTION SUBSTATIONS (TSS) & OVERHEAD EQUIPMENT (OHE) FEEDERS', panelX + 10, panelY + 36);
-
-    // Telemetry Gauges in top right of traction panel
-    const gaugeX = panelX + panelW - 140;
-    ctx.font = '700 10px JetBrains Mono, monospace';
-    ctx.fillStyle = '#00e676';
-    ctx.textAlign = 'right';
-    ctx.fillText('VOLTAGE: 25.4 kV AC', panelX + panelW - 10, panelY + 20);
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillText('CURRENT: 420 A', panelX + panelW - 10, panelY + 34);
-    ctx.fillStyle = '#facc15';
-    ctx.fillText('FREQ: 50.02 Hz', panelX + panelW - 10, panelY + 48);
-
-    // Draw SCADA Single-Line Diagram
-    const busY1 = panelY + Math.round(remH * 0.26);   // 132 kV Grid Infeed Busbar
-    const busY2 = panelY + Math.round(remH * 0.52);  // 25 kV Catenary Busbar UP
-    const busY3 = panelY + Math.round(remH * 0.75);  // 25 kV Catenary Busbar DOWN
-
-    const busStartX = panelX + 30;
-    const busEndX = panelX + panelW - 30;
-
-    // 132 kV Grid Line
-    ctx.beginPath();
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 2;
-    ctx.moveTo(busStartX, busY1);
-    ctx.lineTo(busEndX, busY1);
-    ctx.stroke();
-
-    ctx.font = '700 8px JetBrains Mono, monospace';
-    ctx.fillStyle = '#ef4444';
-    ctx.textAlign = 'left';
-    ctx.fillText('132 kV GRID INFEED BUS', busStartX, busY1 - 6);
-
-    // 25 kV OHE Catenary Lines
-    ctx.beginPath();
-    ctx.strokeStyle = '#00e676';
-    ctx.lineWidth = 2.5;
-    ctx.moveTo(busStartX, busY2);
-    ctx.lineTo(busEndX, busY2);
-    ctx.stroke();
-
-    ctx.font = '700 8px JetBrains Mono, monospace';
-    ctx.fillStyle = '#00e676';
-    ctx.fillText('25 kV OHE FEEDER UP LINE', busStartX, busY2 - 6);
-
-    ctx.beginPath();
-    ctx.strokeStyle = '#00e676';
-    ctx.lineWidth = 2.5;
-    ctx.moveTo(busStartX, busY3);
-    ctx.lineTo(busEndX, busY3);
-    ctx.stroke();
-
-    ctx.fillText('25 kV OHE FEEDER DOWN LINE', busStartX, busY3 - 6);
-
-    // Traction Transformers & Circuit Breakers (SCADA Electrical Symbols)
-    const stationsTSS = [
-      { name: 'DKDE TSS (Km 32)', x: busStartX + (busEndX - busStartX) * 0.25 },
-      { name: 'KRJ TSS (Km 65)', x: busStartX + (busEndX - busStartX) * 0.70 }
-    ];
-
-    stationsTSS.forEach(tss => {
-      const x = tss.x;
-
-      // Transformer 132/25 kV 30 MVA (Two interlocking circles)
-      const trY = (busY1 + busY2) / 2;
-      ctx.beginPath();
-      ctx.strokeStyle = '#00d2ff';
-      ctx.lineWidth = 1.5;
-      ctx.arc(x, trY - 8, 10, 0, Math.PI * 2);
-      ctx.arc(x, trY + 8, 10, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.font = '700 7px JetBrains Mono, monospace';
-      ctx.fillStyle = '#38bdf8';
-      ctx.textAlign = 'center';
-      ctx.fillText('TR 30MVA', x, trY + 2);
-
-      // Connecting feeder lines
-      ctx.beginPath();
-      ctx.strokeStyle = '#00e676';
-      ctx.lineWidth = 1.5;
-      ctx.moveTo(x, busY1);
-      ctx.lineTo(x, trY - 18);
-      ctx.moveTo(x, trY + 18);
-      ctx.lineTo(x, busY2);
-      ctx.lineTo(x, busY3);
-      ctx.stroke();
-
-      // SCADA Circuit Breakers (Green square = CLOSED/HEALTHY, Red = OPEN)
-      const breakers = [
-        { y: busY1 + 18, id: 'CB-101' },
-        { y: busY2 - 16, id: 'CB-201' },
-        { y: busY3 - 16, id: 'CB-202' }
-      ];
-
-      breakers.forEach(b => {
-        ctx.fillStyle = '#00e676';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(x - 6, b.y - 6, 12, 12, 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.font = '600 6px JetBrains Mono, monospace';
-        ctx.fillStyle = '#0f172a';
-        ctx.textAlign = 'center';
-        ctx.fillText('ON', x, b.y + 3);
-      });
-
-      // TSS Station Name
-      ctx.font = '700 8px JetBrains Mono, monospace';
-      ctx.fillStyle = '#f1f5f9';
-      ctx.fillText(tss.name, x, busY3 + 22);
-    });
-
-    // Neutral Section Insulators
-    const nsX = busStartX + (busEndX - busStartX) * 0.50;
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillRect(nsX - 8, busY2 - 3, 16, 6);
-    ctx.fillRect(nsX - 8, busY3 - 3, 16, 6);
-
-    ctx.font = '700 7px JetBrains Mono, monospace';
-    ctx.fillStyle = '#f59e0b';
-    ctx.textAlign = 'center';
-    ctx.fillText('NEUTRAL SECTION', nsX, busY2 + 16);
-
     ctx.restore();
   }
 
