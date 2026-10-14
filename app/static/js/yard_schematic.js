@@ -33,7 +33,7 @@ class OccVideoWallRenderer {
     const isFullscreen = !!document.fullscreenElement || this.canvas.parentElement.classList.contains('fullscreen-active');
     const rect = this.canvas.parentElement.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    const targetHeight = isFullscreen ? window.innerHeight : 640;
+    const targetHeight = isFullscreen ? window.innerHeight : 450;
     this.canvas.width = rect.width * dpr;
     this.canvas.height = targetHeight * dpr;
     this.canvas.style.width = `${rect.width}px`;
@@ -161,26 +161,26 @@ class OccVideoWallRenderer {
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 1;
       ctx.setLineDash([2, 4]);
-      ctx.moveTo(x, 60);
-      ctx.lineTo(x, 280);
+      ctx.moveTo(x, yUpLoop - 8);
+      ctx.lineTo(x, yDownLoop + 8);
       ctx.stroke();
       ctx.setLineDash([]);
 
       // Station Platform Boxes (White CTC Box)
-      const pfW = 38;
-      const pfH = 9;
+      const pfW = 34;
+      const pfH = 8;
 
       // Platform 1 (Up)
       ctx.fillStyle = '#0f172a';
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1;
-      ctx.strokeRect(x - pfW / 2, yUpMain - 18, pfW, pfH);
+      ctx.strokeRect(x - pfW / 2, yUpMain - 15, pfW, pfH);
 
       // Platform 2 (Down)
-      ctx.strokeRect(x - pfW / 2, yDownMain + 9, pfW, pfH);
+      ctx.strokeRect(x - pfW / 2, yDownMain + 7, pfW, pfH);
 
       // Station Loop Turnouts
-      const loopW = 36;
+      const loopW = 32;
       // UP Loop siding
       ctx.beginPath();
       ctx.strokeStyle = '#0084c7';
@@ -199,15 +199,16 @@ class OccVideoWallRenderer {
       ctx.lineTo(x + loopW, yDownMain);
       ctx.stroke();
 
-      // Station Name
+      // Station Name & Km - dynamically centered between UP and DOWN tracks
+      const stMidY = (yUpMain + yDownMain) / 2;
       ctx.font = '800 10px Plus Jakarta Sans, sans-serif';
       ctx.fillStyle = st.is_junction ? '#facc15' : '#e2e8f0';
       ctx.textAlign = 'center';
-      ctx.fillText(st.code, x, 168);
+      ctx.fillText(st.code, x, stMidY - 2);
 
       ctx.font = '500 8px JetBrains Mono, monospace';
       ctx.fillStyle = '#64748b';
-      ctx.fillText(`${st.km}k`, x, 180);
+      ctx.fillText(`${st.km}k`, x, stMidY + 10);
     });
 
     // 2. Crossovers between UP and DOWN tracks at Junctions (GZB, DER, KRJ, ALJN)
